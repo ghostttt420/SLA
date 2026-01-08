@@ -250,15 +250,45 @@
                 }
             },
             "Delivery & Rides": {
-                fedex: {
-                    name: "FedEx",
-                    issues: [
-                        { id: 'late', name: 'Money Back Guarantee (Express Only)', inputs: ['Tracking Number', 'Time Due', 'Time Delivered'] }
-                    ],
-                    scripts: {
-                        late: (tracking, due, delivered) => `I am filing a claim for the Money-Back Guarantee on shipment #${tracking}. This package was shipped via FedEx Express (Overnight/2Day) with a commitment time of ${due}. It was delivered at ${delivered}. Per the FedEx Service Guide, I am entitled to a full refund of transportation charges.`
+                            fedex: {
+                name: "FedEx",
+                issues: [
+                    // ORIGINAL (Late Express)
+                    { 
+                        id: 'late', 
+                        name: 'Money Back Guarantee (Express Only)', 
+                        inputs: ['Tracking Number', 'Time Due', 'Time Delivered'] 
+                    },
+                    // NEW: STUCK / LOST (For Stephen Blue)
+                    { 
+                        id: 'stuck', 
+                        name: 'Stuck/No Movement (>7 Days)', 
+                        inputs: ['Tracking Number', 'Last Scan Date', 'Last Location'] 
+                    },
+                    // NEW: CUSTOMS / INTERNATIONAL (For David)
+                    { 
+                        id: 'customs', 
+                        name: 'Intl. Customs Delay (>5 Days)', 
+                        inputs: ['Tracking Number', 'Days in Clearance'] 
+                    },
+                    // NEW: RETAILER REFUND (For Five)
+                    { 
+                        id: 'retailer', 
+                        name: 'Late Retail Delivery (Best Buy/Nike/etc)', 
+                        inputs: ['Retailer Name', 'Order Number', 'Promised Date'] 
                     }
-                },
+                ],
+                scripts: {
+                    late: (tracking, due, delivered) => `I am filing a claim for the Money-Back Guarantee on shipment #${tracking}. This package was shipped via FedEx Express (Overnight/2Day) with a commitment time of ${due}. It was delivered at ${delivered}. Per the FedEx Service Guide, I am entitled to a full refund of transportation charges.`,
+                    
+                    stuck: (tracking, lastDate, loc) => `I am requesting an immediate TRACE investigation for shipment #${tracking}. The last scan was on ${lastDate} at ${loc} and there has been no movement for over 7 days. Under FedEx policy, this package is now approaching "Lost Status." Please initiate a physical dock search at the last known hub and provide me with the Case Number immediately. If not located within 48 hours, I will be filing a claim for the full declared value.`,
+                    
+                    customs: (tracking, days) => `Shipment #${tracking} has been stuck in "Clearance Delay" for ${days} days. I have already paid the import duties. Please escalate this to the FedEx Trade Networks (FTN) team immediately to identify if a Commercial Invoice is missing or if the broker is delaying release. I am requesting a "Live Entry Status" update within 24 hours.`,
+                    
+                    retailer: (retailer, order, date) => `Regarding Order #${order}: This item was promised to arrive by ${date} but has been delayed by your carrier (FedEx). As I am the recipient, I cannot file a claim with FedEx directly—YOU are their customer. I am requesting that you either: 1) Refund my shipping fees immediately, or 2) Issue a store credit for the service failure. I paid for a guaranteed date that was not met.`
+                }
+            },
+
                 uber: {
                     name: "Uber / Uber Eats",
                     issues: [
