@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The SLA Advocate | Policy Enforcement</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* "Human" Design: Professional, Monospaced, High Contrast */
+        body { font-family: 'Courier New', Courier, monospace; background-color: #f4f4f4; color: #111; }
+        .ticket { background: white; border: 2px solid #000; box-shadow: 4px 4px 0px #000; }
+        .btn-black { background: #000; color: #fff; font-weight: bold; border: 2px solid #000; transition: all 0.1s; }
+        .btn-black:active { transform: translate(2px, 2px); box-shadow: none; }
+        .btn-black:hover { background: #333; }
+        ::selection { background: #000; color: #fff; }
+    </style>
+</head>
+<body class="p-4 md:p-10 flex flex-col items-center min-h-screen">
+
+    <header class="w-full max-w-2xl mb-12 text-center md:text-left">
+        <h1 class="text-3xl md:text-5xl font-bold tracking-tighter uppercase border-b-4 border-black inline-block pb-2">The SLA Advocate</h1>
+        <p class="mt-4 text-lg font-medium text-gray-700">Don't complain. Cite the policy.</p>
+        <p class="text-sm text-gray-500 mt-1">Free tool. Local-first. No AI hallucinations.</p>
+    </header>
+
+    <main class="w-full max-w-2xl">
+        
+        <div class="ticket p-6 mb-8" id="selector-panel">
+            <h2 class="text-xl font-bold uppercase mb-4 border-b-2 border-gray-200 pb-2">1. Select Provider & Issue</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-bold mb-2 text-sm">Provider</label>
+                    <select id="provider" class="w-full p-3 border-2 border-black bg-gray-50 focus:outline-none focus:bg-white rounded-none">
+                        <option value="comcast">Comcast / Xfinity</option>
+                        <option value="fedex">FedEx</option>
+                        <option value="delta">Delta Airlines</option>
+                        <option value="amazon">Amazon Prime</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold mb-2 text-sm">Issue</label>
+                    <select id="issue" class="w-full p-3 border-2 border-black bg-gray-50 focus:outline-none focus:bg-white rounded-none">
+                        </select>
+                </div>
+            </div>
+
+            <div id="variables" class="mt-6 space-y-4">
+                </div>
+
+            <button onclick="generateScript()" class="btn-black w-full mt-6 py-4 text-lg uppercase tracking-widest">
+                Generate Demand Script
+            </button>
+        </div>
+
+        <div id="output-panel" class="hidden">
+            <div class="ticket p-6 bg-yellow-50 relative">
+                <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-1 text-xs font-bold uppercase tracking-widest">
+                    Ready to Copy
+                </div>
+                
+                <h2 class="text-xl font-bold uppercase mb-4">Your Script:</h2>
+                <textarea id="final-script" class="w-full h-48 p-4 border-2 border-gray-300 font-mono text-sm bg-white resize-none focus:outline-none focus:border-black" readonly></textarea>
+                
+                <div class="flex gap-4 mt-4">
+                    <button onclick="copyText()" class="btn-black flex-1 py-3 text-sm uppercase">Copy to Clipboard</button>
+                    <button onclick="reset()" class="bg-white border-2 border-black text-black flex-1 py-3 text-sm uppercase font-bold hover:bg-gray-100">Start Over</button>
+                </div>
+
+                <div class="mt-4 p-3 bg-gray-200 text-xs text-gray-700">
+                    <strong>Note:</strong> This script cites specific internal policies. Do not edit the legal terms.
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="mt-20 text-center text-xs text-gray-400 font-mono">
+        Built for the consumer. Not the corporation. <br>
+        2026 Sovereign Tools.
+    </footer>
+
+    <script>
+        // THE "GOLD CLAUSE" DATABASE
+        const database = {
+            comcast: {
+                issues: [
+                    { id: 'outage', name: 'Service Outage (>4 Hours)', inputs: ['Outage Duration (e.g., 6 hours)'] },
+                    { id: 'speed', name: 'Speed Below Guaranteed', inputs: ['Promised Speed', 'Actual Speed'] }
+                ],
+                scripts: {
+                    outage: (duration) => `I am contacting you regarding a service interruption on my account. My internet service was down for approximately ${duration}. Under the Xfinity Residential Services Agreement, I am requesting a pro-rated credit for this service failure. Please confirm the credit has been applied to my next billing statement immediately.`,
+                    speed: (promised, actual) => `I am paying for ${promised} download speeds, but consistent testing shows I am receiving ${actual}. This fails to meet the service level provisioned for my tier. Please troubleshoot this immediately or issue a credit for the difference in service tiers retroactive to the start of this issue.`
+                }
+            },
+            fedex: {
+                issues: [
+                    { id: 'late', name: 'Late Delivery (Money Back Guarantee)', inputs: ['Tracking Number', 'Time Due', 'Time Delivered'] }
+                ],
+                scripts: {
+                    late: (tracking, due, delivered) => `I am filing a claim for the Money-Back Guarantee on shipment #${tracking}. This package was shipped via a guaranteed service level with a commitment time of ${due}. It was delivered at ${delivered}, which constitutes a service failure. Per the FedEx Service Guide (Money-Back Guarantee Policy), I am entitled to a full refund of shipping charges.`
+                }
+            },
+            delta: {
+                issues: [
+                    { id: 'delay', name: 'Controllable Delay (>3 Hours)', inputs: ['Flight Number', 'Hours Delayed'] },
+                    { id: 'cancellation', name: 'Cancellation (Overnight)', inputs: ['Flight Number'] }
+                ],
+                scripts: {
+                    delay: (flight, hours) => `My flight ${flight} has been delayed for ${hours} hours. Since this delay is within Delta's control (maintenance/crew), I am requesting the meal vouchers mandated by your Customer Commitment. Please provide these immediately via the app or email.`,
+                    cancellation: (flight) => `Flight ${flight} was cancelled due to a controllable irregularity. As this requires an overnight stay, I am requesting hotel accommodation and ground transportation vouchers as outlined in the Delta Customer Commitment/Contract of Carriage. I am not accepting a simple rebooking without these amenities.`
+                }
+            },
+            amazon: {
+                issues: [
+                    { id: 'late_prime', name: 'Missed "Guaranteed Delivery"', inputs: ['Order ID'] }
+                ],
+                scripts: {
+                    late_prime: (orderId) => `Regarding Order #${orderId}: This item arrived after the "Guaranteed Delivery Date" stated at checkout. Under your shipping policy, I am entitled to a refund of any shipping fees paid, or a promotional credit if shipping was free. Please process this immediately.`
+                }
+            }
+        };
+
+        // UI LOGIC
+        const providerSelect = document.getElementById('provider');
+        const issueSelect = document.getElementById('issue');
+        const variablesDiv = document.getElementById('variables');
+        
+        // Update Issue List when Provider changes
+        providerSelect.addEventListener('change', updateIssues);
+        updateIssues(); // Init
+
+        function updateIssues() {
+            const provider = providerSelect.value;
+            const data = database[provider];
+            issueSelect.innerHTML = '';
+            
+            data.issues.forEach(issue => {
+                const opt = document.createElement('option');
+                opt.value = issue.id;
+                opt.textContent = issue.name;
+                issueSelect.appendChild(opt);
+            });
+            updateInputs();
+        }
+
+        // Update Inputs when Issue changes
+        issueSelect.addEventListener('change', updateInputs);
+
+        function updateInputs() {
+            const provider = providerSelect.value;
+            const issueId = issueSelect.value;
+            const inputs = database[provider].issues.find(i => i.id === issueId).inputs;
+            
+            variablesDiv.innerHTML = '';
+            inputs.forEach((label, index) => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label class="block font-bold mb-1 text-xs uppercase">${label}</label>
+                    <input type="text" id="input-${index}" class="w-full p-2 border border-gray-400 font-mono text-sm" placeholder="Enter details...">
+                `;
+                variablesDiv.appendChild(div);
+            });
+        }
+
+        function generateScript() {
+            const provider = providerSelect.value;
+            const issueId = issueSelect.value;
+            const inputs = Array.from(variablesDiv.querySelectorAll('input')).map(i => i.value);
+            
+            // Call the script function from database
+            const scriptFunc = database[provider].scripts[issueId];
+            const finalText = scriptFunc(...inputs); // Spread input values into function
+
+            document.getElementById('final-script').value = finalText;
+            document.getElementById('selector-panel').classList.add('hidden');
+            document.getElementById('output-panel').classList.remove('hidden');
+        }
+
+        function copyText() {
+            const textArea = document.getElementById('final-script');
+            textArea.select();
+            document.execCommand('copy');
+            alert('Script copied to clipboard!');
+        }
+
+        function reset() {
+            document.getElementById('selector-panel').classList.remove('hidden');
+            document.getElementById('output-panel').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+
