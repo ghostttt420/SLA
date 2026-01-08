@@ -21,7 +21,7 @@
     <header class="w-full max-w-2xl mb-12 text-center md:text-left">
         <h1 class="text-3xl md:text-5xl font-bold tracking-tighter uppercase border-b-4 border-black inline-block pb-2">The SLA Advocate</h1>
         <p class="mt-4 text-lg font-medium text-gray-700">Don't complain. Cite the policy.</p>
-       
+        <p class="text-sm text-gray-500 mt-1">Database v4.0 • Global Consumer Laws Added</p>
     </header>
 
     <main class="w-full max-w-2xl">
@@ -72,7 +72,7 @@
 
     </main>
 
-        <footer class="mt-12 w-full max-w-2xl border-t-2 border-gray-300 pt-8 mb-10">
+    <footer class="mt-12 w-full max-w-2xl border-t-2 border-gray-300 pt-8 mb-10">
         
         <div class="bounty-box p-6 mb-8 text-center">
             <h3 class="font-bold uppercase tracking-widest mb-2">💰 Policy Bounties</h3>
@@ -105,13 +105,150 @@
 
     <script>
         /* * ==========================================
-         * THE DATABASE (SEPARATE THIS FOR SCALING)
+         * THE GLOBAL "GOLD CLAUSE" DATABASE v4.0
          * ==========================================
-         * To scale: Move this object to 'policies.json' 
-         * and use fetch() to load it.
          */
         const database = {
-            "ISP & Tech": {
+            "Delivery & Retail": {
+                fedex: {
+                    name: "FedEx",
+                    issues: [
+                        { id: 'stuck', name: 'Stuck/Lost (>7 Days No Move)', inputs: ['Tracking Number', 'Last Location'] },
+                        { id: 'customs', name: 'Intl. Customs Delay (>5 Days)', inputs: ['Tracking Number', 'Days Stuck'] },
+                        { id: 'retailer', name: 'Retailer Refund Force (Best Buy/Nike)', inputs: ['Retailer Name', 'Order Number', 'Promised Date'] },
+                        { id: 'late', name: 'Money Back Guarantee (Express Only)', inputs: ['Tracking Number', 'Time Due', 'Time Delivered'] }
+                    ],
+                    scripts: {
+                        stuck: (tracking, loc) => `I am requesting an immediate TRACE investigation for shipment #${tracking}. The last scan was at ${loc} and there has been no movement for over 7 days. Under FedEx policy, this package is approaching "Lost Status." Please initiate a physical dock search at the last known hub and provide the Case Number. If not located within 48 hours, I will file a claim for the full declared value.`,
+                        customs: (tracking, days) => `Shipment #${tracking} has been stuck in "Clearance Delay" for ${days} days. I have paid import duties. Please escalate this to the FedEx Trade Networks (FTN) team to identify if a Commercial Invoice is missing. I am requesting a "Live Entry Status" update within 24 hours.`,
+                        retailer: (retailer, order, date) => `Regarding Order #${order}: This item was promised by ${date} but has been delayed by your carrier. As I am the recipient, I cannot file a claim with FedEx—YOU are their customer. I am requesting that you either: 1) Refund my shipping fees, or 2) Issue a store credit for the service failure. I paid for a guaranteed date that was not met.`,
+                        late: (tracking, due, delivered) => `I am filing a claim for the Money-Back Guarantee on shipment #${tracking}. This package was shipped via FedEx Express with a commitment time of ${due}. It was delivered at ${delivered}. Per the FedEx Service Guide, I am entitled to a full refund of transportation charges.`
+                    }
+                },
+                amazon: {
+                    name: "Amazon",
+                    issues: [
+                        { id: 'late_prime', name: 'Missed "Guaranteed Delivery"', inputs: ['Order ID'] },
+                        { id: 'chat_loop', name: 'Stuck in Chat Bot Loop', inputs: ['Issue Summary'] }
+                    ],
+                    scripts: {
+                        late_prime: (orderId) => `Regarding Order #${orderId}: This item arrived after the "Guaranteed Delivery Date" stated at checkout. Under your shipping policy, I am entitled to a refund of any shipping fees paid, or a promotional credit if shipping was free.`,
+                        chat_loop: (issue) => `[SYSTEM PHRASE]: "Associate". I am requesting to speak to a Human Associate immediately regarding ${issue}. I have already attempted to resolve this via the automated system.`
+                    }
+                },
+                uber: {
+                    name: "Uber / Uber Eats",
+                    issues: [
+                        { id: 'cleaning', name: 'Dispute Cleaning Fee', inputs: ['Trip Date', 'Fee Amount'] },
+                        { id: 'cold', name: 'Uber Eats Quality/Cold', inputs: ['Order Date'] }
+                    ],
+                    scripts: {
+                        cleaning: (date, fee) => `I am disputing the ${fee} cleaning fee charged on ${date}. Please provide timestamped photos and a valid receipt from a professional cleaning service as required by your terms. Please escalate this to a human agent immediately to bypass automated denials.`,
+                        cold: (date) => `My order from ${date} arrived significantly later than the estimate and the food was cold. Under the Uber Eats refund policy regarding Food Quality, I am requesting a refund. Please escalate this to a human agent to review the delivery logs.`
+                    }
+                }
+            },
+            "Airlines (Global)": {
+                montreal: {
+                    name: "Any Airline (Intl. Lost Bag)",
+                    issues: [
+                        { id: 'lost_bag', name: 'Montreal Convention (Lost/Damaged)', inputs: ['Airline', 'Flight Number', 'Value of Items'] }
+                    ],
+                    scripts: {
+                        lost_bag: (airline, flight, value) => `My luggage was lost/damaged on flight ${flight}. Under the Montreal Convention 1999, your liability is strict up to ~1,288 SDR (approx $1,700 USD). My documented loss is ${value}. I am filing this formal claim within the statutory 21-day window. Please process this compensation immediately.`
+                    }
+                },
+                delta: {
+                    name: "Delta (USA)",
+                    issues: [
+                        { id: 'controllable', name: 'Controllable Delay (Hotel/Meal)', inputs: ['Flight Number', 'Delay Duration'] }
+                    ],
+                    scripts: {
+                        controllable: (flight, hours) => `My flight ${flight} is delayed ${hours} hours due to a "Controllable Irregularity" (Crew/Maintenance). Per your Customer Commitment and the US DOT Dashboard, I am entitled to meal vouchers and (if overnight) hotel accommodation. Please issue these immediately.`
+                    }
+                },
+                eu_flights: {
+                    name: "Any EU Flight (EC 261)",
+                    issues: [
+                        { id: 'delay_comp', name: 'Flight Delay Cash (>3 Hours)', inputs: ['Flight Number', 'Hours Delayed', 'Distance (km)'] }
+                    ],
+                    scripts: {
+                        delay_comp: (flight, hours, dist) => `Flight ${flight} arrived ${hours} hours late. Under Regulation (EC) No 261/2004, I am entitled to fixed cash compensation (up to €600) as this was not an "Extraordinary Circumstance." Please provide the link to your compensation form or process this payment to my original method.`
+                    }
+                }
+            },
+            "Hotels & Travel": {
+                hilton: {
+                    name: "Hilton Hotels",
+                    issues: [
+                        { id: 'price_match', name: 'Price Match + 25% Off', inputs: ['Booking Ref', 'Competitor Link', 'Lower Price'] }
+                    ],
+                    scripts: {
+                        price_match: (ref, link, price) => `I have a reservation ${ref}. I found a lower rate of ${price} on ${link} for the exact same room/dates. Under the Hilton Price Match Guarantee, I am requesting you match this price AND apply the additional 25% discount. I am submitting this claim within the required 24-hour window.`
+                    }
+                },
+                turo: {
+                    name: "Turo (Car Rental)",
+                    issues: [
+                        { id: 'cleaning_fee', name: 'Dispute Cleaning Fee', inputs: ['Trip ID'] }
+                    ],
+                    scripts: {
+                        cleaning_fee: (trip) => `I am disputing the cleaning fee for trip ${trip}. I returned the car in a condition reflecting "normal use" (dirt/sand). Under Turo's Host Cleaning Policy, you cannot charge for normal wear unless there is a "major stain" or "smoking." Please provide the timestamped pre/post-trip photos to substantiate this invalid charge.`
+                    }
+                },
+                airbnb: {
+                    name: "Airbnb",
+                    issues: [
+                        { id: 'ac_broken', name: 'Broken Amenity (AC/WiFi)', inputs: ['Booking Code', 'Amenity'] },
+                        { id: 'inaccurate', name: 'Listing Inaccuracy (Refund)', inputs: ['Booking Ref', 'Missing Amenity'] }
+                    ],
+                    scripts: {
+                        ac_broken: (code, amenity) => `Ref: ${code}. The listing stated ${amenity} was included, but it is broken/missing. Under the Guest Refund Policy, this is a "Travel Issue." I am reporting this within 72 hours of discovery. I am requesting a partial refund of 30% for the days affected, or I will need to be rebooked to a compliant listing.`,
+                        inaccurate: (ref, amenity) => `Regarding booking ${ref}: The listing explicitly stated it included ${amenity}, which is missing. Under the Guest Refund Policy, this qualifies as a listing inaccuracy. I am requesting a partial refund of 50% for the affected nights.`
+                    }
+                },
+                marriott: {
+                    name: "Marriott Hotels",
+                    issues: [
+                        { id: 'walked', name: 'Reservation Guarantee (Walked)', inputs: ['Hotel Name'] }
+                    ],
+                    scripts: {
+                        walked: (hotel) => `I arrived at ${hotel} with a valid reservation but was told no rooms were available. Under the Marriott "Ultimate Reservation Guarantee," I am entitled to: 1) Paid accommodation at a nearby hotel, 2) Compensation for the inconvenience, and 3) Points. Please process this immediately.`
+                    }
+                },
+                booking: {
+                    name: "Booking.com",
+                    issues: [
+                        { id: 'price_match', name: 'Price Match Guarantee', inputs: ['Booking Ref', 'Competitor Site', 'Lower Price'] }
+                    ],
+                    scripts: {
+                        price_match: (ref, site, price) => `Regarding booking ${ref}: I found a lower price of ${price} on ${site} for the exact same stay (same dates, room type, and cancellation policy). Under the Booking.com 'We Price Match' guarantee, please refund the difference between what I paid and this lower rate.`
+                    }
+                }
+            },
+            "Banking & Credit": {
+                visa: {
+                    name: "Visa Card Dispute",
+                    issues: [
+                        { id: 'not_received', name: 'Reason Code 13.1 (Not Received)', inputs: ['Merchant', 'Date of Purchase'] },
+                        { id: 'subscription', name: 'Reason Code 13.5 (Cancelled Sub)', inputs: ['Merchant', 'Date Cancelled'] }
+                    ],
+                    scripts: {
+                        not_received: (merchant, date) => `I am disputing the charge from ${merchant} on ${date}. Merchandise was not received by the agreed date. I have attempted to contact the merchant with no resolution. Please process a Chargeback under Visa Reason Code 13.1 (Merchandise/Services Not Received).`,
+                        subscription: (merchant, date) => `I am disputing the recurring charge from ${merchant}. I cancelled this service on ${date}, yet was charged again. Under Visa Reason Code 13.5 (Misrepresentation), I have revocation of authorization. Please reverse the charge and block future attempts.`
+                    }
+                },
+                chase: {
+                    name: "Chase Bank",
+                    issues: [
+                        { id: 'overdraft', name: 'Overdraft Fee Reversal', inputs: ['Date of Fee'] }
+                    ],
+                    scripts: {
+                        overdraft: (date) => `I am requesting a courtesy reversal of the Overdraft Fee charged on ${date}. I have been a loyal customer and this was an isolated oversight. Please waive this fee as a gesture of goodwill.`
+                    }
+                }
+            },
+            "ISP & Streaming": {
                 comcast: {
                     name: "Comcast / Xfinity",
                     issues: [
@@ -120,16 +257,25 @@
                     ],
                     scripts: {
                         outage: (duration) => `I am contacting you regarding a service interruption. My internet service was unusable for approximately ${duration}. Under the Xfinity Residential Services Agreement (Service Interruptions), I am requesting a pro-rated credit for this failure. Please confirm the credit has been applied to my next billing statement.`,
-                        speed: (promised, actual) => `I am paying for ${promised} download speeds, but consistent testing shows I am receiving ${actual}. This fails to meet the service level provisioned for my tier. Please troubleshoot this immediately or issue a credit for the difference in service tiers retroactive to the start of this issue.`
+                        speed: (promised, actual) => `I am paying for ${promised} download speeds, but consistent testing shows I am receiving ${actual}. This fails to meet the service level provisioned for my tier. Please troubleshoot this immediately or issue a credit for the difference in service tiers.`
                     }
                 },
-                starlink: {
-                    name: "Starlink",
+                att: {
+                    name: "AT&T / ISP",
                     issues: [
-                        { id: 'outage', name: 'Significant Outage (>45 mins)', inputs: ['Date of Outage', 'Duration'] }
+                        { id: 'outage', name: 'Service Outage Credit', inputs: ['Account #', 'Hours Down'] }
                     ],
                     scripts: {
-                        outage: (date, duration) => `I am reporting a service outage on ${date} that lasted for ${duration}. According to the Starlink Service Level Agreement, outages exceeding certain thresholds on Priority plans warrant a service credit. Please review my dish logs for this timeframe and apply the appropriate SLA credit to my account.`
+                        outage: (acct, hours) => `My internet service (Acct ${acct}) was down for ${hours} hours. Under your Service Level Agreement (SLA), I am paying for 99.9% uptime. I am requesting a pro-rated credit for the downtime applied to my next bill. Please confirm this credit.`
+                    }
+                },
+                netflix: {
+                    name: "Netflix/Disney+",
+                    issues: [
+                        { id: 'price_hike', name: 'Reject Price Hike', inputs: ['Old Price', 'New Price'] }
+                    ],
+                    scripts: {
+                        price_hike: (oldP, newP) => `I do not accept the unilateral price increase from ${oldP} to ${newP}. As this is a material change to our contract terms, I am exercising my right to cancel immediately without penalty. If I have been charged the new rate, please refund the difference.`
                     }
                 },
                 adobe: {
@@ -140,40 +286,18 @@
                     scripts: {
                         fee: (plan) => `I am requesting the cancellation of my ${plan} subscription without the Early Termination Fee. I was not adequately notified that this "Annual" plan locked me into a binding contract versus a monthly service. This lack of clear disclosure constitutes a dark pattern. Please cancel the service immediately and waive the contract obligation.`
                     }
-                }
-            },
-            "Streaming & Apps": {
-                netflix: {
-                    name: "Netflix",
-                    issues: [
-                        { id: 'price', name: 'Price Increase Cancellation', inputs: ['Original Price', 'New Price'] }
-                    ],
-                    scripts: {
-                        price: (oldP, newP) => `I am rejecting the unilateral price increase from ${oldP} to ${newP}. As this is a material change to the terms agreed upon at signup, I am exercising my right to cancel the service immediately. If I have already been charged the new rate, please refund the difference and close the account effective immediately.`
-                    }
                 },
-                spotify: {
-                    name: "Spotify",
+                starlink: {
+                    name: "Starlink",
                     issues: [
-                        { id: 'accidental', name: 'Accidental Renewal Refund', inputs: ['Date Charged'] }
+                        { id: 'outage', name: 'Significant Outage (>45 mins)', inputs: ['Date of Outage', 'Duration'] }
                     ],
                     scripts: {
-                        accidental: (date) => `I was charged for a Premium renewal on ${date}. I have not used the service since this charge was made. Under consumer cooling-off policies, I am requesting an immediate refund and cancellation of this billing cycle. Please confirm the reversal of the charge.`
-                    }
-                },
-                apple: {
-                    name: "Apple App Store",
-                    issues: [
-                        { id: 'accidental_purchase', name: 'Accidental App Purchase', inputs: ['App Name', 'Date Purchased'] },
-                        { id: 'sub_refund', name: 'Subscription Refund', inputs: ['App Name'] }
-                    ],
-                    scripts: {
-                        accidental_purchase: (app, date) => `I am requesting a refund for ${app} purchased on ${date}. This purchase was made in error/accidentally. I have deleted the app and have not utilized the content. Please process a refund to my original payment method under the 'Right of Withdrawal' or standard accidental purchase policy.`,
-                        sub_refund: (app) => `I intended to cancel the free trial for ${app} but was charged due to the auto-renewal timing. I have not used the service since the charge. Please refund the subscription fee as a one-time courtesy.`
+                        outage: (date, duration) => `I am reporting a service outage on ${date} that lasted for ${duration}. According to the Starlink Service Level Agreement, outages exceeding certain thresholds on Priority plans warrant a service credit. Please review my dish logs for this timeframe and apply the appropriate SLA credit to my account.`
                     }
                 }
             },
-            "Gaming": {
+            "Gaming & Tech": {
                 steam: {
                     name: "Steam",
                     issues: [
@@ -200,124 +324,16 @@
                     scripts: {
                         digital_xbox: (game) => `I am requesting a refund for the digital purchase of ${game}. I have not accumulated significant playtime and the purchase was made recently. Under the Microsoft Digital Goods Refund Policy, I am eligible for a refund. Please reverse the transaction.`
                     }
-                }
-            },
-            "Travel & Hotels": {
-                delta: {
-                    name: "Delta Airlines",
-                    issues: [
-                        { id: 'delay', name: 'Controllable Delay (>3 Hours)', inputs: ['Flight Number', 'Hours Delayed'] }
-                    ],
-                    scripts: {
-                        delay: (flight, hours) => `My flight ${flight} has been delayed for ${hours} hours. As this delay is within Delta's control, I am requesting meal vouchers as mandated by the Delta Customer Commitment and as defined in the US DOT Customer Service Dashboard. Please provide these immediately.`
-                    }
                 },
-                ba: {
-                    name: "British Airways / EU",
+                apple: {
+                    name: "Apple App Store",
                     issues: [
-                        { id: 'eu261', name: 'EU 261 Compensation (Delay)', inputs: ['Flight Number', 'Hours Delayed'] }
+                        { id: 'accidental_purchase', name: 'Accidental App Purchase', inputs: ['App Name', 'Date Purchased'] },
+                        { id: 'sub_refund', name: 'Subscription Refund', inputs: ['App Name'] }
                     ],
                     scripts: {
-                        eu261: (flight, hours) => `My flight ${flight} arrived ${hours} hours late. Under Regulation (EC) No 261/2004, I am entitled to compensation for this delay as it was not caused by extraordinary circumstances (weather/ATC). Please process the statutory fixed compensation to my original payment method.`
-                    }
-                },
-                marriott: {
-                    name: "Marriott Hotels",
-                    issues: [
-                        { id: 'walked', name: 'Reservation Guarantee (Walked)', inputs: ['Hotel Name'] }
-                    ],
-                    scripts: {
-                        walked: (hotel) => `I arrived at ${hotel} with a valid reservation but was told no rooms were available. Under the Marriott "Ultimate Reservation Guarantee," I am entitled to: 1) Paid accommodation at a nearby hotel, 2) Compensation for the inconvenience, and 3) Points. Please process this immediately.`
-                    }
-                },
-                booking: {
-                    name: "Booking.com",
-                    issues: [
-                        { id: 'price_match', name: 'Price Match Guarantee', inputs: ['Booking Ref', 'Competitor Site', 'Lower Price'] }
-                    ],
-                    scripts: {
-                        price_match: (ref, site, price) => `Regarding booking ${ref}: I found a lower price of ${price} on ${site} for the exact same stay (same dates, room type, and cancellation policy). Under the Booking.com 'We Price Match' guarantee, please refund the difference between what I paid and this lower rate.`
-                    }
-                },
-                airbnb: {
-                    name: "Airbnb",
-                    issues: [
-                        { id: 'inaccurate', name: 'Listing Inaccuracy (Refund)', inputs: ['Booking Ref', 'Missing Amenity'] }
-                    ],
-                    scripts: {
-                        inaccurate: (ref, amenity) => `Regarding booking ${ref}: The listing explicitly stated it included ${amenity}, which is missing. Under the Guest Refund Policy, this qualifies as a listing inaccuracy. I am requesting a partial refund of 50% for the affected nights.`
-                    }
-                }
-            },
-            "Delivery & Rides": {
-                            fedex: {
-                name: "FedEx",
-                issues: [
-                    // ORIGINAL (Late Express)
-                    { 
-                        id: 'late', 
-                        name: 'Money Back Guarantee (Express Only)', 
-                        inputs: ['Tracking Number', 'Time Due', 'Time Delivered'] 
-                    },
-                    // NEW: STUCK / LOST (For Stephen Blue)
-                    { 
-                        id: 'stuck', 
-                        name: 'Stuck/No Movement (>7 Days)', 
-                        inputs: ['Tracking Number', 'Last Scan Date', 'Last Location'] 
-                    },
-                    // NEW: CUSTOMS / INTERNATIONAL (For David)
-                    { 
-                        id: 'customs', 
-                        name: 'Intl. Customs Delay (>5 Days)', 
-                        inputs: ['Tracking Number', 'Days in Clearance'] 
-                    },
-                    // NEW: RETAILER REFUND (For Five)
-                    { 
-                        id: 'retailer', 
-                        name: 'Late Retail Delivery (Best Buy/Nike/etc)', 
-                        inputs: ['Retailer Name', 'Order Number', 'Promised Date'] 
-                    }
-                ],
-                scripts: {
-                    late: (tracking, due, delivered) => `I am filing a claim for the Money-Back Guarantee on shipment #${tracking}. This package was shipped via FedEx Express (Overnight/2Day) with a commitment time of ${due}. It was delivered at ${delivered}. Per the FedEx Service Guide, I am entitled to a full refund of transportation charges.`,
-                    
-                    stuck: (tracking, lastDate, loc) => `I am requesting an immediate TRACE investigation for shipment #${tracking}. The last scan was on ${lastDate} at ${loc} and there has been no movement for over 7 days. Under FedEx policy, this package is now approaching "Lost Status." Please initiate a physical dock search at the last known hub and provide me with the Case Number immediately. If not located within 48 hours, I will be filing a claim for the full declared value.`,
-                    
-                    customs: (tracking, days) => `Shipment #${tracking} has been stuck in "Clearance Delay" for ${days} days. I have already paid the import duties. Please escalate this to the FedEx Trade Networks (FTN) team immediately to identify if a Commercial Invoice is missing or if the broker is delaying release. I am requesting a "Live Entry Status" update within 24 hours.`,
-                    
-                    retailer: (retailer, order, date) => `Regarding Order #${order}: This item was promised to arrive by ${date} but has been delayed by your carrier (FedEx). As I am the recipient, I cannot file a claim with FedEx directly—YOU are their customer. I am requesting that you either: 1) Refund my shipping fees immediately, or 2) Issue a store credit for the service failure. I paid for a guaranteed date that was not met.`
-                }
-            },
-
-                uber: {
-                    name: "Uber / Uber Eats",
-                    issues: [
-                        { id: 'cleaning', name: 'Dispute Cleaning Fee', inputs: ['Trip Date', 'Fee Amount'] },
-                        { id: 'cold', name: 'Uber Eats Quality/Cold', inputs: ['Order Date'] }
-                    ],
-                    scripts: {
-                        cleaning: (date, fee) => `I am disputing the ${fee} cleaning fee charged on ${date}. Please provide timestamped photos and a valid receipt from a professional cleaning service as required by your terms. Please escalate this to a human agent immediately to bypass automated denials.`,
-                        cold: (date) => `My order from ${date} arrived significantly later than the estimate and the food was cold. Under the Uber Eats refund policy regarding Food Quality, I am requesting a refund. Please escalate this to a human agent to review the delivery logs.`
-                    }
-                },
-                amazon: {
-                    name: "Amazon Prime",
-                    issues: [
-                        { id: 'late_prime', name: 'Missed "Guaranteed Delivery"', inputs: ['Order ID'] }
-                    ],
-                    scripts: {
-                        late_prime: (orderId) => `Regarding Order #${orderId}: This item arrived after the "Guaranteed Delivery Date" stated at checkout. Under your shipping policy, I am entitled to a refund of any shipping fees paid, or a promotional credit if shipping was free.`
-                    }
-                }
-            },
-            "Finance": {
-                chase: {
-                    name: "Chase Bank",
-                    issues: [
-                        { id: 'fee', name: 'Overdraft Fee Reversal', inputs: ['Date of Fee'] }
-                    ],
-                    scripts: {
-                        fee: (date) => `I am writing to request a courtesy reversal of the Overdraft Fee charged on ${date}. I have been a loyal customer and this was an isolated oversight. Please waive this fee as a gesture of goodwill.`
+                        accidental_purchase: (app, date) => `I am requesting a refund for ${app} purchased on ${date}. This purchase was made in error/accidentally. I have deleted the app and have not utilized the content. Please process a refund to my original payment method under the 'Right of Withdrawal' or standard accidental purchase policy.`,
+                        sub_refund: (app) => `I intended to cancel the free trial for ${app} but was charged due to the auto-renewal timing. I have not used the service since the charge. Please refund the subscription fee as a one-time courtesy.`
                     }
                 }
             }
@@ -331,7 +347,6 @@
         const issueSelect = document.getElementById('issue');
         const variablesDiv = document.getElementById('variables');
         
-        // Populate Provider Dropdown with Optgroups
         function initProviders() {
             for (const [category, services] of Object.entries(database)) {
                 const group = document.createElement('optgroup');
@@ -339,7 +354,7 @@
                 
                 for (const [key, details] of Object.entries(services)) {
                     const opt = document.createElement('option');
-                    opt.value = `${category}|${key}`; // Store path to data
+                    opt.value = `${category}|${key}`;
                     opt.textContent = details.name;
                     group.appendChild(opt);
                 }
@@ -347,7 +362,6 @@
             }
         }
 
-        // Handle Change
         providerSelect.addEventListener('change', updateIssues);
         issueSelect.addEventListener('change', updateInputs);
 
@@ -407,16 +421,10 @@
             document.getElementById('output-panel').classList.add('hidden');
         }
 
-        // Initialize on Load
-        initProviders();
-        updateIssues();
         // --- DONATION LOGIC ---
-        
-        // PASTE YOUR WALLET ADDRESS HERE vvv
         const YOUR_SOL_WALLET = "2YPZDsdBEZmjA4LVjWuUf6qAhLGzgiKtrh5CcimyEz5Y"; 
 
         function copySolAddress() {
-            // Create a temporary input to copy from
             const tempInput = document.createElement("input");
             tempInput.value = YOUR_SOL_WALLET;
             document.body.appendChild(tempInput);
@@ -424,14 +432,12 @@
             document.execCommand("copy");
             document.body.removeChild(tempInput);
 
-            // Change button text temporarily to show success
             const btn = document.getElementById("sol-btn");
             const originalText = btn.innerText;
             btn.innerText = "Address Copied!";
             btn.style.backgroundColor = "#000";
             btn.style.color = "#fff";
 
-            // Reset button after 2 seconds
             setTimeout(() => {
                 btn.innerText = originalText;
                 btn.style.backgroundColor = "#fff";
@@ -439,7 +445,9 @@
             }, 2000);
         }
 
-
+        // Initialize on Load
+        initProviders();
+        updateIssues();
     </script>
 </body>
 </html>
