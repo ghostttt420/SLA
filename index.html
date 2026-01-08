@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The SLA Advocate | Policy Enforcement</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     <style>
         /* "Human" Design: Professional, Monospaced, High Contrast */
         body { font-family: 'Courier New', Courier, monospace; background-color: #f4f4f4; color: #111; }
@@ -13,6 +14,7 @@
         .btn-black:active { transform: translate(2px, 2px); box-shadow: none; }
         .btn-black:hover { background: #333; }
         .bounty-box { border: 2px dashed #000; background: #eee; }
+        .evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
         ::selection { background: #000; color: #fff; }
     </style>
 </head>
@@ -21,7 +23,7 @@
     <header class="w-full max-w-2xl mb-12 text-center md:text-left">
         <h1 class="text-3xl md:text-5xl font-bold tracking-tighter uppercase border-b-4 border-black inline-block pb-2">The SLA Advocate</h1>
         <p class="mt-4 text-lg font-medium text-gray-700">Don't complain. Cite the policy.</p>
-        
+        <p class="text-sm text-gray-500 mt-1">Database v5.0 • Live Evidence Wall Added</p>
     </header>
 
     <main class="w-full max-w-2xl">
@@ -50,7 +52,7 @@
             </button>
         </div>
 
-        <div id="output-panel" class="hidden">
+        <div id="output-panel" class="hidden mb-12">
             <div class="ticket p-6 bg-yellow-50 relative">
                 <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-1 text-xs font-bold uppercase tracking-widest">
                     Ready to Copy
@@ -75,6 +77,19 @@
             </div>
         </div>
 
+        <section class="w-full mb-12 border-t-2 border-gray-300 pt-8">
+            <h2 class="text-xl font-bold uppercase mb-4">🔴 Live Evidence (Wall of Shame)</h2>
+            <p class="text-sm text-gray-600 mb-4">Attach active complaints from X/Twitter to track service failures in real-time.</p>
+            
+            <div class="flex gap-2 mb-6">
+                <input type="text" id="tweet-url" class="flex-1 p-2 border-2 border-black font-mono text-sm" placeholder="Paste X/Twitter Link (e.g. x.com/user/status/123...)">
+                <button onclick="attachTweet()" class="btn-black px-4 py-2 text-sm uppercase">Attach</button>
+            </div>
+
+            <div id="tweet-wall" class="evidence-grid">
+                </div>
+        </section>
+
     </main>
 
     <footer class="mt-12 w-full max-w-2xl border-t-2 border-gray-300 pt-8 mb-10">
@@ -91,11 +106,9 @@
         </div>
 
         <div class="flex flex-col md:flex-row justify-center gap-4 text-center">
-            
             <a href="https://buymeacoffee.com/ghostttt" target="_blank" class="btn-black py-3 px-6 text-sm uppercase no-underline">
                 ☕ Buy Me A Coffee
             </a>
-
             <button onclick="copySolAddress()" id="sol-btn" class="bg-white border-2 border-black text-black py-3 px-6 text-sm uppercase font-bold hover:bg-gray-100">
                 ⚡ Donate SOL
             </button>
@@ -107,10 +120,41 @@
         </p>
     </footer>
 
-
     <script>
         /* * ==========================================
-         * THE DATABASE v4.1 (With Routing)
+         * TWEET RENDER LOGIC
+         * ==========================================
+         */
+        function attachTweet() {
+            const url = document.getElementById('tweet-url').value;
+            const container = document.getElementById('tweet-wall');
+            
+            // Extract ID from URL (works for x.com and twitter.com)
+            const match = url.match(/(?:twitter|x)\.com\/\w+\/status\/(\d+)/);
+            
+            if (match && match[1]) {
+                const tweetId = match[1];
+                const div = document.createElement('div');
+                div.className = "tweet-card bg-white p-1 border border-gray-200";
+                container.prepend(div); // Add to top
+                
+                // Use Twitter Widget to Render
+                if (window.twttr) {
+                    twttr.widgets.createTweet(tweetId, div, {
+                        theme: 'light',
+                        conversation: 'none' // Hides replies for cleaner look
+                    });
+                }
+                
+                // Clear input
+                document.getElementById('tweet-url').value = '';
+            } else {
+                alert("Invalid Link. Please paste a full X.com or Twitter.com post link.");
+            }
+        }
+
+        /* * ==========================================
+         * THE DATABASE
          * ==========================================
          */
         const database = {
