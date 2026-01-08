@@ -72,7 +72,7 @@
 
     </main>
 
-    <footer class="mt-12 w-full max-w-2xl border-t-2 border-gray-300 pt-8 mb-10">
+        <footer class="mt-12 w-full max-w-2xl border-t-2 border-gray-300 pt-8 mb-10">
         
         <div class="bounty-box p-6 mb-8 text-center">
             <h3 class="font-bold uppercase tracking-widest mb-2">💰 Policy Bounties</h3>
@@ -86,12 +86,14 @@
         </div>
 
         <div class="flex flex-col md:flex-row justify-center gap-4 text-center">
-            <a href="#" class="btn-black py-3 px-6 text-sm uppercase no-underline">
+            
+            <a href="https://buymeacoffee.com/ghostttt" target="_blank" class="btn-black py-3 px-6 text-sm uppercase no-underline">
                 ☕ Buy Me A Coffee
             </a>
-            <a href="#" class="bg-white border-2 border-black text-black py-3 px-6 text-sm uppercase font-bold no-underline hover:bg-gray-100">
+
+            <button onclick="copySolAddress()" id="sol-btn" class="bg-white border-2 border-black text-black py-3 px-6 text-sm uppercase font-bold hover:bg-gray-100">
                 ⚡ Donate SOL
-            </a>
+            </button>
         </div>
         
         <p class="text-center text-xs text-gray-400 font-mono mt-8">
@@ -99,6 +101,7 @@
             2026 Sovereign Tools.
         </p>
     </footer>
+
 
     <script>
         /* * ==========================================
@@ -377,6 +380,35 @@
         // Initialize on Load
         initProviders();
         updateIssues();
+        // --- DONATION LOGIC ---
+        
+        // PASTE YOUR WALLET ADDRESS HERE vvv
+        const YOUR_SOL_WALLET = "2YPZDsdBEZmjA4LVjWuUf6qAhLGzgiKtrh5CcimyEz5Y"; 
+
+        function copySolAddress() {
+            // Create a temporary input to copy from
+            const tempInput = document.createElement("input");
+            tempInput.value = YOUR_SOL_WALLET;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+
+            // Change button text temporarily to show success
+            const btn = document.getElementById("sol-btn");
+            const originalText = btn.innerText;
+            btn.innerText = "Address Copied!";
+            btn.style.backgroundColor = "#000";
+            btn.style.color = "#fff";
+
+            // Reset button after 2 seconds
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = "#fff";
+                btn.style.color = "#000";
+            }, 2000);
+        }
+
 
     </script>
 </body>
